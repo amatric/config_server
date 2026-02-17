@@ -608,7 +608,7 @@ config-server/
 │   ├── keywords.json            # 关键词库
 │   ├── users.json               # 用户账号
 │   ├── logs.json                # 操作日志
-│   └── detection_data.json      # 检测数据（生产环境用 ClickHouse）
+│   └── detection_data.json      # 检测数据
 ├── src/
 │   ├── app.js                   # 应用入口
 │   ├── middleware/
@@ -640,7 +640,7 @@ config-server/
 
 ## 注意事项
 
-1. **数据存储**：当前使用 JSON 文件存储，生产环境请改用 ClickHouse
+1. **数据存储**：当前使用 JSON 文件存储，稍后改用 ClickHouse
 2. **Token 有效期**：1 小时，过期需重新登录
 3. **批量上报限制**：单次最多 1000 条
 4. **日志保留**：最多保留 1000 条操作日志
