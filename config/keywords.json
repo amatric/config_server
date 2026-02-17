@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "updated_at": "2025-02-13T10:00:00Z",
+  "categories": {
+    "personal_info": {
+      "name": "个人信息",
+      "keywords": ["身份证", "手机号", "银行卡", "家庭住址", "邮箱"]
+    },
+    "credentials": {
+      "name": "凭证信息",
+      "keywords": ["密码", "password", "token", "secret", "api_key", "私钥"]
+    },
+    "business": {
+      "name": "商业机密",
+      "keywords": ["机密", "内部资料", "薪资", "财务报表", "客户名单"]
+    }
+  }
+}

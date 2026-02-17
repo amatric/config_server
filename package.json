@@ -1,0 +1,14 @@
+{
+  "name": "config-server",
+  "version": "1.0.0",
+  "description": "大模型安全防泄漏 - 配置管理服务",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "node --watch src/app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}
