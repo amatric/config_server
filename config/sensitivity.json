@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "updated_at": "2025-02-13T10:00:00Z",
+  "levels": {
+    "high": {
+      "threshold": 0.9,
+      "action": "block",
+      "description": "高风险 - 直接拦截"
+    },
+    "medium": {
+      "threshold": 0.6,
+      "action": "warn",
+      "description": "中风险 - 警告用户"
+    },
+    "low": {
+      "threshold": 0.3,
+      "action": "log",
+      "description": "低风险 - 仅记录"
+    }
+  }
+}

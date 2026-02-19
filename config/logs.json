@@ -1,0 +1,94 @@
+{
+  "logs": [
+    {
+      "id": 1771481362973,
+      "username": "admin",
+      "action": "登录成功",
+      "detail": "管理员登录系统",
+      "type": "info",
+      "unread": false,
+      "created_at": "2026-02-19T06:09:22.973Z"
+    },
+    {
+      "id": 1771480979931,
+      "username": "admin",
+      "action": "登录成功",
+      "detail": "管理员登录系统",
+      "type": "info",
+      "unread": false,
+      "created_at": "2026-02-19T06:02:59.931Z"
+    },
+    {
+      "id": 1771480875310,
+      "username": "admin",
+      "action": "登录成功",
+      "detail": "管理员登录系统",
+      "type": "info",
+      "unread": false,
+      "created_at": "2026-02-19T06:01:15.310Z"
+    },
+    {
+      "id": 1771480770455,
+      "username": "admin",
+      "action": "登录成功",
+      "detail": "管理员登录系统",
+      "type": "info",
+      "unread": false,
+      "created_at": "2026-02-19T05:59:30.455Z"
+    },
+    {
+      "id": 1771480589016,
+      "username": "admin",
+      "action": "登录成功",
+      "detail": "管理员登录系统",
+      "type": "info",
+      "unread": false,
+      "created_at": "2026-02-19T05:56:29.016Z"
+    },
+    {
+      "id": 1771480484683,
+      "username": "admin",
+      "action": "登录成功",
+      "detail": "管理员登录系统",
+      "type": "info",
+      "unread": false,
+      "created_at": "2026-02-19T05:54:44.683Z"
+    },
+    {
+      "id": 1771480322232,
+      "username": "admin",
+      "action": "登录成功",
+      "detail": "管理员登录系统",
+      "type": "info",
+      "unread": false,
+      "created_at": "2026-02-19T05:52:02.232Z"
+    },
+    {
+      "id": 1771480052463,
+      "username": "admin",
+      "action": "登录成功",
+      "detail": "管理员登录系统",
+      "type": "info",
+      "unread": false,
+      "created_at": "2026-02-19T05:47:32.463Z"
+    },
+    {
+      "id": 1771479703350,
+      "username": "admin",
+      "action": "登录成功",
+      "detail": "管理员登录系统",
+      "type": "info",
+      "unread": false,
+      "created_at": "2026-02-19T05:41:43.350Z"
+    },
+    {
+      "id": 1771479245168,
+      "username": "admin",
+      "action": "登录成功",
+      "detail": "管理员登录系统",
+      "type": "info",
+      "unread": false,
+      "created_at": "2026-02-19T05:34:05.168Z"
+    }
+  ]
+}
