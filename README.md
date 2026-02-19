@@ -2,20 +2,71 @@
 
 管理与配置终端后端服务，提供配置管理、数据接收、统计查询等功能。
 
+---
+
 ## 快速开始
 
+### 1. 启动 ClickHouse（Docker）
+
 ```bash
+# 拉取镜像
+docker pull clickhouse/clickhouse-server
+
+# 启动容器
+docker run -d --name clickhouse \
+  -p 8123:8123 \
+  -p 9000:9000 \
+  clickhouse/clickhouse-server
+```
+
+### 2. 配置 ClickHouse 用户
+
+```bash
+# 进入 ClickHouse 命令行
+docker exec -it clickhouse clickhouse-client
+
+# 创建用户（在 ClickHouse 里执行）
+CREATE USER IF NOT EXISTS admin IDENTIFIED WITH no_password;
+GRANT CURRENT GRANTS ON *.* TO admin;
+
+# 退出
+exit
+```
+
+### 3. 启动服务
+
+```bash
+cd config-server
+
 # 安装依赖
 npm install
 
-# 启动服务
+# 启动
 npm start
-
-# 开发模式（自动重启）
-npm run dev
 ```
 
-服务默认运行在 `http://localhost:3000`
+看到以下输出说明启动成功：
+
+```
+========================================
+  配置管理服务已启动
+  地址: http://localhost:3000
+========================================
+[ClickHouse] 数据库初始化成功
+```
+
+---
+
+## Docker 常用命令
+
+```bash
+docker ps                    # 查看运行中的容器
+docker stop clickhouse       # 停止 ClickHouse
+docker start clickhouse      # 启动 ClickHouse
+docker restart clickhouse    # 重启 ClickHouse
+docker logs clickhouse       # 查看日志
+docker exec -it clickhouse clickhouse-client  # 进入命令行
+```
 
 ---
 
@@ -23,12 +74,18 @@ npm run dev
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   数据采集端     │────▶│   本服务（你）   │◀────│   前端管理门户   │
+│   数据采集端     │────▶│   本服务（后端） │◀────│   前端管理门户   │
 │                 │     │                 │     │                 │
 │ - 读取配置      │     │ - 配置管理      │     │ - 修改配置      │
 │ - 上报检测数据  │     │ - 数据存储      │     │ - 查看统计      │
 └─────────────────┘     │ - 统计查询      │     │ - 查看日志      │
                         └─────────────────┘     └─────────────────┘
+                                 │
+                                 ▼
+                        ┌─────────────────┐
+                        │   ClickHouse    │
+                        │   (Docker)      │
+                        └─────────────────┘
 ```
 
 ---
@@ -40,9 +97,9 @@ npm run dev
 | 🔓 公开 | 无需登录，采集端可直接调用 |
 | 🔐 需登录 | 需要在 Header 中携带 Token |
 
-Token 获取方式：调用登录接口后返回
+**Token 获取方式**：调用登录接口
 
-Header 格式：`Authorization: Bearer <token>`
+**Header 格式**：`Authorization: Bearer <token>`
 
 ---
 
@@ -94,8 +151,6 @@ Header 格式：`Authorization: Bearer <token>`
 
 #### 🔓 GET /api/config/sensitivity - 获取敏感度配置
 
-**说明：** 采集端启动时调用，获取敏感度阈值配置
-
 **响应：**
 ```json
 {
@@ -138,8 +193,6 @@ Header 格式：`Authorization: Bearer <token>`
 ```
 
 #### 🔓 GET /api/config/keywords - 获取关键词配置
-
-**说明：** 采集端调用，获取敏感词库
 
 **响应：**
 ```json
@@ -202,8 +255,6 @@ Header 格式：`Authorization: Bearer <token>`
 
 #### 🔓 POST /api/data/upload - 单条数据上报
 
-**说明：** 采集端检测到风险后，调用此接口上报
-
 **请求：**
 ```json
 {
@@ -219,7 +270,7 @@ Header 格式：`Authorization: Bearer <token>`
 | 字段 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | device_id | string | ✅ | 设备唯一标识 |
-| risk_level | string | ✅ | 风险等级：high/medium/low |
+| risk_level | string | ✅ | 风险等级：high / medium / low |
 | risk_content | string | ❌ | 风险内容摘要（脱敏后） |
 | hit_keywords | array | ❌ | 命中的关键词列表 |
 | engine_type | string | ❌ | 检测引擎类型 |
@@ -233,15 +284,13 @@ Header 格式：`Authorization: Bearer <token>`
     "id": "1707820200000abc123",
     "device_id": "PC-001",
     "risk_level": "high",
-    "created_at": "2025-02-13T10:30:00Z"
+    "created_at": "2025-02-13 10:30:00"
   },
   "message": "数据上报成功"
 }
 ```
 
 #### 🔓 POST /api/data/upload/batch - 批量数据上报
-
-**说明：** 批量上报，单次最多 1000 条
 
 **请求：**
 ```json
@@ -269,16 +318,12 @@ Header 格式：`Authorization: Bearer <token>`
 ```json
 {
   "success": true,
-  "data": {
-    "count": 2
-  },
+  "data": { "count": 2 },
   "message": "成功上报 2 条数据"
 }
 ```
 
 #### 🔓 GET /api/data/list - 查询检测数据
-
-**Query 参数：**
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
@@ -308,7 +353,7 @@ GET /api/data/list?device_id=PC-001&risk_level=high&page=1&page_size=20
         "risk_content": "检测到身份证号",
         "hit_keywords": ["身份证"],
         "engine_type": "keyword",
-        "created_at": "2025-02-13T10:30:00Z"
+        "created_at": "2025-02-13 10:30:00"
       }
     ],
     "pagination": {
@@ -326,10 +371,6 @@ GET /api/data/list?device_id=PC-001&risk_level=high&page=1&page_size=20
 ### 四、统计查询接口（供前端使用）
 
 #### 🔐 GET /api/stats/risk-distribution - 风险分布统计
-
-**说明：** 按时间段统计每日风险数量，用于图表展示
-
-**Query 参数：**
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
@@ -350,18 +391,13 @@ GET /api/stats/risk-distribution?start=2025-02-01&end=2025-02-13
     "end_date": "2025-02-13",
     "distribution": [
       { "date": "2025-02-01", "high": 5, "medium": 12, "low": 30, "total": 47 },
-      { "date": "2025-02-02", "high": 3, "medium": 8, "low": 25, "total": 36 },
-      { "date": "2025-02-03", "high": 7, "medium": 15, "low": 28, "total": 50 }
+      { "date": "2025-02-02", "high": 3, "medium": 8, "low": 25, "total": 36 }
     ]
   }
 }
 ```
 
 #### 🔐 GET /api/stats/device-ranking - 设备违规排名
-
-**说明：** 获取违规次数最多的设备排名
-
-**Query 参数：**
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
@@ -385,15 +421,7 @@ GET /api/stats/device-ranking?limit=10
         "high": 10,
         "medium": 20,
         "low": 20,
-        "last_violation": "2025-02-13T15:30:00Z"
-      },
-      {
-        "device_id": "PC-002",
-        "total": 35,
-        "high": 5,
-        "medium": 15,
-        "low": 15,
-        "last_violation": "2025-02-13T14:20:00Z"
+        "last_violation": "2025-02-13 15:30:00"
       }
     ]
   }
@@ -401,8 +429,6 @@ GET /api/stats/device-ranking?limit=10
 ```
 
 #### 🔐 GET /api/stats/overview - 概览统计
-
-**说明：** 获取今日统计和 Top 设备，用于首页展示
 
 **响应：**
 ```json
@@ -417,8 +443,7 @@ GET /api/stats/device-ranking?limit=10
       "total": 76
     },
     "top_devices": [
-      { "device_id": "PC-001", "total": 15 },
-      { "device_id": "PC-002", "total": 12 }
+      { "device_id": "PC-001", "total": 15 }
     ]
   }
 }
@@ -430,18 +455,11 @@ GET /api/stats/device-ranking?limit=10
 
 #### 🔐 GET /api/logs - 获取操作日志
 
-**Query 参数：**
-
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| type | string | 筛选类型：info/warning/error |
-| unreadOnly | boolean | 只看未读：true/false |
+| type | string | 筛选类型：info / warning / error |
+| unreadOnly | boolean | 只看未读：true / false |
 | limit | number | 返回条数，默认 100 |
-
-**示例：**
-```
-GET /api/logs?type=error&unreadOnly=true&limit=50
-```
 
 **响应：**
 ```json
@@ -457,15 +475,6 @@ GET /api/logs?type=error&unreadOnly=true&limit=50
         "type": "info",
         "unread": false,
         "created_at": "2025-02-13T10:00:00Z"
-      },
-      {
-        "id": 1707820100000,
-        "username": "admin",
-        "action": "数据上报失败",
-        "detail": "数据库连接超时",
-        "type": "error",
-        "unread": true,
-        "created_at": "2025-02-13T09:50:00Z"
       }
     ],
     "unreadCount": 3
@@ -475,23 +484,11 @@ GET /api/logs?type=error&unreadOnly=true&limit=50
 
 #### 🔐 GET /api/logs/unread-count - 获取未读数量
 
-**响应：**
-```json
-{
-  "success": true,
-  "data": {
-    "count": 3
-  }
-}
-```
-
 #### 🔐 POST /api/logs/mark-read - 标记已读
 
 **请求（标记单条）：**
 ```json
-{
-  "logId": 1707820100000
-}
+{ "logId": 1707820100000 }
 ```
 
 **请求（标记全部）：**
@@ -501,101 +498,33 @@ GET /api/logs?type=error&unreadOnly=true&limit=50
 
 ---
 
-## 采集端对接指南
+## 数据库结构
 
-### 1. 启动时获取配置
+### ClickHouse 表：detection_logs
 
-```javascript
-// 获取敏感度配置
-const sensitivityRes = await fetch('http://localhost:3000/api/config/sensitivity');
-const sensitivity = await sensitivityRes.json();
-
-// 获取关键词配置
-const keywordsRes = await fetch('http://localhost:3000/api/config/keywords');
-const keywords = await keywordsRes.json();
-```
-
-### 2. 监听配置文件变化
-
-配置文件位于 `config/` 目录下，可使用文件监听实现配置热更新：
-
-```javascript
-const fs = require('fs');
-
-fs.watch('./config/keywords.json', (eventType) => {
-  if (eventType === 'change') {
-    console.log('关键词配置已更新，重新加载...');
-    // 重新读取配置
-  }
-});
-```
-
-### 3. 上报检测数据
-
-```javascript
-// 单条上报
-await fetch('http://localhost:3000/api/data/upload', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    device_id: 'PC-001',
-    risk_level: 'high',
-    risk_content: '检测到身份证号',
-    hit_keywords: ['身份证'],
-    engine_type: 'keyword'
-  })
-});
-
-// 批量上报（建议积攒 10s 或 100 条后批量上报）
-await fetch('http://localhost:3000/api/data/upload/batch', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    records: [...]
-  })
-});
+```sql
+CREATE TABLE security_db.detection_logs (
+  id String,
+  device_id String,
+  risk_level String,
+  risk_content String,
+  hit_keywords Array(String),
+  engine_type String,
+  created_at DateTime DEFAULT now()
+) ENGINE = MergeTree()
+ORDER BY (created_at, device_id)
 ```
 
 ---
 
-## 前端对接指南
+## 环境变量
 
-### 1. 登录获取 Token
-
-```javascript
-const res = await fetch('http://localhost:3000/api/auth/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ username: 'admin', password: 'admin123' })
-});
-const { data } = await res.json();
-const token = data.token;
-
-// 保存 token 到 localStorage
-localStorage.setItem('token', token);
-```
-
-### 2. 携带 Token 请求
-
-```javascript
-const token = localStorage.getItem('token');
-
-const res = await fetch('http://localhost:3000/api/stats/overview', {
-  headers: {
-    'Authorization': `Bearer ${token}`
-  }
-});
-```
-
-### 3. 数据展示建议
-
-| 接口 | 展示形式 |
-|------|----------|
-| /api/stats/risk-distribution | 折线图/柱状图 |
-| /api/stats/device-ranking | 排行榜表格 |
-| /api/stats/overview | 数据卡片 |
-| /api/data/list | 数据表格（带筛选） |
-| /api/logs | 日志列表（异常标红） |
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| PORT | 3000 | 服务端口 |
+| CLICKHOUSE_HOST | http://localhost:8123 | ClickHouse 地址 |
+| CLICKHOUSE_USER | admin | ClickHouse 用户名 |
+| CLICKHOUSE_PASSWORD | （空） | ClickHouse 密码 |
 
 ---
 
@@ -607,8 +536,7 @@ config-server/
 │   ├── sensitivity.json         # 敏感度配置
 │   ├── keywords.json            # 关键词库
 │   ├── users.json               # 用户账号
-│   ├── logs.json                # 操作日志
-│   └── detection_data.json      # 检测数据（生产环境用 ClickHouse）
+│   └── logs.json                # 操作日志
 ├── src/
 │   ├── app.js                   # 应用入口
 │   ├── middleware/
@@ -622,10 +550,11 @@ config-server/
 │   └── services/
 │       ├── authService.js       # 认证服务
 │       ├── configService.js     # 配置服务
-│       ├── dataService.js       # 数据服务
+│       ├── dataService.js       # 数据服务（ClickHouse）
 │       └── logService.js        # 日志服务
+├── .gitignore
 ├── package.json
-└── README.md                    # 本文档
+└── README.md
 ```
 
 ---
@@ -640,7 +569,7 @@ config-server/
 
 ## 注意事项
 
-1. **数据存储**：当前使用 JSON 文件存储，生产环境请改用 ClickHouse
+1. **ClickHouse 必须先启动**：服务启动前确保 Docker 里的 ClickHouse 在运行
 2. **Token 有效期**：1 小时，过期需重新登录
 3. **批量上报限制**：单次最多 1000 条
 4. **日志保留**：最多保留 1000 条操作日志
